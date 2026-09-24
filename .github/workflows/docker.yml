@@ -6,8 +6,7 @@ on:
       - main
 
 jobs:
-  build-and-push:
-
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,3 +24,23 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-project:latest
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/github-actions
+          chmod 600 ~/.ssh/github-actions
+
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/github-actions "$EC2_USERNAME@$EC2_HOST" << 'EOF'
+            sudo docker pull vikasgowda27/devops-cicd-project:latest
+            sudo docker stop devops-container || true
+            sudo docker rm devops-container || true
+            sudo docker run -d -p 80:80 --name devops-container vikasgowda27/devops-cicd-project:latest
+          EOF
+     
