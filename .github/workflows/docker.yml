@@ -1,4 +1,4 @@
-- name: Build Docker image
+      - name: Build Docker image
         run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-project:latest .
 
       - name: Push Docker image
@@ -14,4 +14,4 @@
           printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/github-actions
           chmod 600 ~/.ssh/github-actions
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
-          ssh -v -i ~/.ssh/github-actions "$EC2_USERNAME@$EC2_HOST" "echo SSH_CONNECTION_SUCCESSFUL"
+          ssh -v -i ~/.ssh/github-actions "$EC2_USERNAME@$EC2_HOST" "echo SSH_CONNECTION_SUCCESSFUL""
