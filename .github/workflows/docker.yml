@@ -25,14 +25,14 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/devops-cicd-project:latest
 
-      - name: Test SSH connection
+      - name: Deploy to EC2
         env:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_USERNAME: ${{ secrets.EC2_USERNAME }}
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$EC2_SSH_KEY" > ~/.ssh/github-actions
-          chmod 600 ~/.ssh/github-actions
-          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
-          ssh -v -i ~/.ssh/github-actions "$EC2_USERNAME@$EC2_HOST" "echo SSH_CONNECTION_SUCCESSFUL"
+          ssh -i ~/.ssh/github-actions "$EC2_USERNAME@$EC2_HOST" << 'EOF'
+            sudo docker pull vikasgowda27/devops-cicd-project:latest
+            sudo docker stop devops-container || true
+            sudo docker rm devops-container || true
+            sudo docker run -d -p 80:80 --name devops-container vikasgowda27/devops-cicd-project:latest
+          EOF
